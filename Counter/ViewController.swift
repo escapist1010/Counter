@@ -8,7 +8,6 @@
 import UIKit
 
 class ViewController: UIViewController {
-
     @IBOutlet private weak var counterLabel: UILabel!
     
     @IBOutlet private weak var logTextView: UITextView!
@@ -16,66 +15,63 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
     }
+    
+    private let currentDate = Date()
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d.M.yyyy H:mm:ss"
+        return formatter
+    }()
+    
     private var counter: Int = 0
     
-    enum logStatusVariants {
-        case plus
-        case minus
+    enum counterStatusVariants {
+        case rise
+        case fall
         case reset
-        case zero
+        case nothingToReduce
     }
     
+    private func logToTextView(counterStatus: counterStatusVariants) {
+        let formattedDate = dateFormatter.string(from: currentDate)
+        
+        switch counterStatus {
+        case .rise:
+            logTextView.text += "\n\(formattedDate): значение изменено на +1"
+        case .fall:
+            logTextView.text += "\n\(formattedDate): значение изменено на -1"
+        case .reset:
+            logTextView.text += "\n\(formattedDate): значение сброшено"
+        case .nothingToReduce:
+            logTextView.text += "\n\(formattedDate): попытка уменьшить значение счётчика ниже 0"
+        }
+            
+//      Scrolling UITextView when adding a line
+        let range = NSRange(location: logTextView.text.count - 1, length: 0)
+        logTextView.scrollRangeToVisible(range)
+        textToCounterLabel()
+    }
+        
+    private func textToCounterLabel() {
+            counterLabel.text = "Значение счётчика: \(counter)"
+    }
+
     @IBAction private func minusButton(_ sender: Any) {
         if counter > 0 {
             counter -= 1
-            textToCounterLabel()
-            logToTextView(logStatus: .minus)
+            logToTextView(counterStatus: .fall)
         } else {
-            logToTextView(logStatus: .zero)
+            logToTextView(counterStatus: .nothingToReduce)
         }
     }
+    
     @IBAction private func plusButton(_ sender: Any) {
         counter += 1
-        textToCounterLabel()
-        logToTextView(logStatus: .plus)
+        logToTextView(counterStatus: .rise)
     }
     @IBAction private func resetButton(_ sender: Any) {
         counter = 0
-        textToCounterLabel()
-        logToTextView(logStatus: .reset)
+        logToTextView(counterStatus: .reset)
     }
-    
-    private func logToTextView(logStatus: logStatusVariants) {
-        switch logStatus {
-        case .plus:
-            logTextView.text += "\n\(currentDate()): значение изменено на +1"
-        case .minus:
-            logTextView.text += "\n\(currentDate()): значение изменено на -1"
-        case .reset:
-            logTextView.text += "\n\(currentDate()): значение сброшено"
-        case .zero:
-            logTextView.text += "\n\(currentDate()): попытка уменьшить значение счётчика ниже 0"
-        }
         
-//      Прокрутка textView при добавлении новой строки
-        let range = NSRange(location: logTextView.text.count - 1, length: 0)
-        logTextView.scrollRangeToVisible(range)
-    }
-    
-    private func textToCounterLabel() {
-        counterLabel.text = "Значение счётчика: \(counter)"
-    }
-    
-    private func currentDate() -> String {
-        let date = Date()
-        let calendar = Calendar.current
-        let year = calendar.component(.year, from: date)
-        let month = calendar.component(.month, from: date)
-        let day = calendar.component(.day, from: date)
-        let hour = calendar.component(.hour, from: date)
-        let minute = calendar.component(.minute, from: date)
-        let second = calendar.component(.second, from: date)
-        return "\(day).\(month).\(year) \(hour):\(minute):\(second)"
-    }
-
 }
